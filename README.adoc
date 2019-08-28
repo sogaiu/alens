@@ -1,0 +1,23 @@
+= Alens
+
+This project contains bits to enable communication between a JVM / CLR Clojure or ClojureScript project and Antoine, an Electron app containing https://github.com/Lokeh/punk[punk]'s UI.
+
+== Acknowledgments
+
+Thanks to (at least) the following folks:
+
+* cark
+* danielneal
+* darwin
+* dmiller
+* kajism
+* Lokeh
+* mauricioszabo
+* nasser
+* Saikyun
+* seancorfield
+* stuarthalloway
+* theophilusx
+* thheller
+* timsgardner
+

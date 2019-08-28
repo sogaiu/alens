@@ -1,0 +1,12 @@
+{
+ :paths
+ [
+  "src"
+ ]
+
+ :deps
+ {
+   sogaiu/punk {:git/url "https://github.com/sogaiu/punk.git"
+                :sha "0cf86cc1a70f9ba5d5e938ed872c2810307172f7"}
+ }
+}
