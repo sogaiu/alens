@@ -7,6 +7,6 @@
  :deps
  {
    sogaiu/punk {:git/url "https://github.com/sogaiu/punk.git"
-                :sha "0cf86cc1a70f9ba5d5e938ed872c2810307172f7"}
+                :sha "4c78243995837a2b71ae9e1292f7b1a0ff63ae58"}
  }
 }
