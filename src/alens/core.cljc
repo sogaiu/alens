@@ -1,7 +1,7 @@
 (ns alens.core
   (:require
    #?(:cljs
-      [alens.ws :as cw]
+      [alens.ws :as aw]
       :default
       [alens.tcp :as ct])))
 
