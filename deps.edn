@@ -8,5 +8,7 @@
  {
    sogaiu/punk {:git/url "https://github.com/sogaiu/punk.git"
                 :sha "4c78243995837a2b71ae9e1292f7b1a0ff63ae58"}
+   sogaiu/antoine-bin {:git/url "https://github.com/sogaiu/antoine-bin"
+                       :sha "b42c85f5f6912775a80fa0c2229f87fad4cd4439"}
  }
 }
