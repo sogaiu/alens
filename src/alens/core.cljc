@@ -7,16 +7,21 @@
    #?(:clj
       [clojure.java.shell :as cjs]
       :cljr
-      [clojure.clr.shell :as cls])))
+      [clojure.clr.shell :as ccs]))
+  #?(:cljr
+     (:import [System.IO Path])))
 
 #?(:clj
    (defn start-ui
      ([]
       (start-ui 1338))
      ([port]
-      (let [jcp (System/getProperty "java.class.path")
-            [_ parent-dir] (re-find #":?([^:]+/antoine-bin)[^:]+:?"
-                             jcp)
+      (let [jcp (-> (System/getProperty "java.class.path")
+                  (.split (System/getProperty "path.separator"))
+                  seq) ; XXX: seq unnecessary?
+            parent-dir (->> jcp
+                         (filter #(re-matches #".*antoine-bin.*" %))
+                         first)
             antoine-path (str parent-dir "/antoine")]
         ;; XXX: keep return value?
         (future (cjs/sh antoine-path
@@ -31,13 +36,15 @@
      ([]
       (start-ui 1338))
      ([port]
-      (let [cljr-load-path
-            (Environment/GetEnvironmentVariable "CLOJURE_LOAD_PATH")
-            [_ parent-dir] (re-find #":?([^:]+/antoine-bin)[^:]+:?"
-                             cljr-load-path)
+      (let [clp-seq
+            (-> (Environment/GetEnvironmentVariable "CLOJURE_LOAD_PATH")
+              (.Split (.ToCharArray (str System.IO.Path/PathSeparator))))
+            parent-dir (->> clp-seq
+                         (filter #(re-matches #".*antoine-bin.*" %))
+                         first)
             antoine-path (str parent-dir "/antoine")]
         (when parent-dir
-          (future (cls/sh antoine-path
+          (future (ccs/sh antoine-path
                     "--no-sandbox" ; only for arch linux and derivatives?
                     (str port)))
           ;; XXX: timing issues?
