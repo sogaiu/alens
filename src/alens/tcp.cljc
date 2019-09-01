@@ -39,12 +39,21 @@
 
      (defn connect
        [host port]
-       (let [client (Socket. host port)
-             writer (cji/writer client)
-             reader (cji/reader client)]
-         {:client client
-          :writer writer
-          :reader reader}))
+       (when-let [client (try
+                           (Socket. host port)
+                           (catch Exception e nil))]
+         (let [writer (cji/writer client)
+               reader (cji/reader client)]
+           {:client client
+            :writer writer
+            :reader reader})))
+
+     (defn disconnect
+       [conn]
+       (when conn
+         (when-let [client (:client conn)]
+           (when (.isConnected client)
+             (.close client)))))
 
      (defn send-msg
        [{:keys [writer]} message]
@@ -65,12 +74,21 @@
 
      (defn connect
        [host port]
-       (let [client (TcpClient. host port)
-             writer (cci/text-writer (.-Client client))
-             reader (cci/text-reader (.-Client client))]
-         {:client client
-          :writer writer
-          :reader reader}))
+       (when-let [client (try
+                           (TcpClient. host port)
+                           (catch Exception e nil))]
+         (let [writer (cci/text-writer (.-Client client))
+               reader (cci/text-reader (.-Client client))]
+           {:client client
+            :writer writer
+            :reader reader})))
+
+     (defn disconnect
+       [conn]
+       (when conn
+         (when-let [client (:client conn)]
+           (when (.-Connected client)
+             (.Close client)))))
 
      (defn send-msg
        [{:keys [writer]} message]
@@ -92,28 +110,25 @@
 
    :default
    (do
-     (defonce abort
-       (atom false))
-
      (defn start-loop
        [conn]
-       (while (not @abort)
-         (let [a-line (get-line conn)]
+       (loop [a-line (get-line conn)]
+         (when a-line
            ;; XXX
            (cl/log-if-debug (str "received: " a-line))
-           (when a-line
-             (let [partly (cb/decode a-line)
-                   ;; XXX
-                   _ (cl/log-if-debug (str "partly: " partly))
-                   read-value (ce/read-string
-                               {
-                                #_#_:readers {}
-                                :default tagged-literal}
-                               partly)]
-               ;; XXX
-               (cl/log-if-debug (str "read-value: " read-value))
-               (cl/log-if-debug (str "vector?: " (vector? read-value)))
-               (pc/dispatch read-value))))))
+           (let [partly (cb/decode a-line)
+                 ;; XXX
+                 _ (cl/log-if-debug (str "partly: " partly))
+                 read-value (ce/read-string
+                             {
+                              #_#_:readers {}
+                              :default tagged-literal}
+                             partly)]
+             ;; XXX
+             (cl/log-if-debug (str "read-value: " read-value))
+             (cl/log-if-debug (str "vector?: " (vector? read-value)))
+             (pc/dispatch read-value)
+             (recur (get-line conn))))))
 
      (defonce traffic-loop
        (atom nil))
@@ -137,16 +152,36 @@
 
      (defn start-punk
        [host port]
-       (let [conn (connect host port)]
+       (when-let [conn (connect host port)]
          ;; preparing "frame" to handle the :emit effect
          (setup-emit-handler conn)
          ;; prepare tap> to trigger dispatching
          (pc/add-taps!)
          ;; handle info from the electron app that comes via tcp
          (reset! traffic-loop
-                 (future (start-loop conn)))
+           (future (start-loop conn)))
          ;; capture this return value to work with send-msg or get-line
          conn))
+
+     (defn stop-punk
+       [conn]
+       ;; XXX: no deregister fn?
+       (fc/reg-fx
+         pc/frame :emit
+         (fn emit [v]
+           nil))
+       ;; XXX: could take a while?
+       (disconnect conn)
+       ;;
+       (pc/remove-taps!)
+       ;;
+       (when @traffic-loop
+         (future-cancel @traffic-loop))
+       (reset! traffic-loop nil)
+       ;; reset db
+       (pc/dispatch [:clear])
+       ;;
+       true)
 
      )
    )
@@ -181,9 +216,6 @@
   (send-msg conn (cb/encode "[:entry 0 {:value {:a 1 :b 2} :meta nil}]"))
 
   ;; following possibly of interest...
-
-  ;; stop handling the tcp info from electron by exiting loop
-  (reset! abort true) ; reset! to false before restarting
 
   ;; try to stop handling tcp info from electron by stopping thread
   (future-cancel @traffic-loop)
