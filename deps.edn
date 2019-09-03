@@ -7,8 +7,8 @@
  :deps
  {
    sogaiu/punk {:git/url "https://github.com/sogaiu/punk.git"
-                :sha "4c78243995837a2b71ae9e1292f7b1a0ff63ae58"}
-   sogaiu/antoine-bin {:git/url "https://github.com/sogaiu/antoine-bin"
-                       :sha "846eb13d12958b2e22d9ed2fcf49fdcc994be1cf"}
+                :sha "c5aff35153b41cddf3240ce4bb1502d1f88b9e57"}
+   sogaiu/antoine-windows {:git/url "https://github.com/sogaiu/antoine-windows"
+                           :sha "b34680283b1d559f7cd9687849002d8e51e00c06"}
  }
 }
